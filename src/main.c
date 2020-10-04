@@ -2,13 +2,13 @@
 #include <math.h>
 #include <stdlib.h>
 
-const int INTERVAL_INPUT_FAILED = -1, INTERVAL_INPUT_SUCCEEDED = 0, RESULTS_OUTPUT_FAILED = 1, RESULTS_OUTPUT_SUCCEEDED = 0;
+const int INTERVAL_INPUT_FAILED = -1, INTERVAL_INPUT_SUCCEEDED = 0, RESULTS_OUTPUT_FAILED = 1, RESULTS_OUTPUT_SUCCEEDED = 0, MAX_STRING_LENGTH = 80;
 
-double rectangle_rule(double left_border, double right_border) {
+double calculate_by_rectangle_rule(double left_border, double right_border) {
 	return sin((left_border + right_border) / 2) * (right_border - left_border);
 }
 
-double composite_simpson_rule(double left_border, double right_border) {
+double calculate_by_composite_simpson_rule(double left_border, double right_border) {
 	return (sin(left_border) + 4 * sin((left_border + right_border) / 2) + sin(right_border)) * (right_border - left_border) / 6;
 }
 
@@ -56,10 +56,11 @@ int read_interval(double *left_border, double *right_border) {
 	return INTERVAL_INPUT_SUCCEEDED;
 }
 
-void free_array_of_strings(char **array, unsigned int array_length) {
-	if (array_length > sizeof(array) / sizeof(char*))
-		array_length = sizeof(array) / sizeof(char*);
-	for (unsigned int i = 0; i < array_length; i++) {
+void free_array_of_strings(char **array, unsigned int elements_to_clear) {
+	int true_array_length = sizeof(array) / sizeof(char*);
+	if (elements_to_clear > true_array_length)
+		elements_to_clear = true_array_length;
+	for (unsigned int i = 0; i < elements_to_clear; i++) {
 		free(array[i]);
 	}
 	free(array);
@@ -73,14 +74,14 @@ char **calculate_areas(double left_border, double right_border, const unsigned i
 	}
 
 	for (int i = 0; i < number_of_experiments; i++) {
-		results_of_experiments[i] = (char *)malloc(sizeof(char) * 80);
+		results_of_experiments[i] = (char *)malloc(sizeof(char) * MAX_STRING_LENGTH);
 		if (results_of_experiments[i] == NULL) {
 			fprintf(stderr, "Cannot allocate memory for result string in %d experiment\n", i + 1);
 			return NULL;
 		}
 
-		double area_rectangle = calculate_area(left_border, right_border, numbers_of_rectangles[i], rectangle_rule);
-		double area_simpson = calculate_area(left_border, right_border, numbers_of_rectangles[i], composite_simpson_rule);
+		double area_rectangle = calculate_area(left_border, right_border, numbers_of_rectangles[i], calculate_by_rectangle_rule);
+		double area_simpson = calculate_area(left_border, right_border, numbers_of_rectangles[i], calculate_by_composite_simpson_rule);
 		if (sprintf(results_of_experiments[i], "%d %.5f %.5f", numbers_of_rectangles[i], area_rectangle, area_simpson) <= 0) {
 			fprintf(stderr, "Cannot write result of %d experiment to a string\n", i + 1);
 			free_array_of_strings(results_of_experiments, i);
